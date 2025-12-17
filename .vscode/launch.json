@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:slow-quit-apps}",
+      "name": "Debug slow-quit-apps",
+      "target": "slow-quit-apps",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug slow-quit-apps"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:slow-quit-apps}",
+      "name": "Release slow-quit-apps",
+      "target": "slow-quit-apps",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release slow-quit-apps"
+    }
+  ]
+}
