@@ -8,6 +8,11 @@ struct GeneralSettingsView: View {
     @State private var showingImporter = false
     @State private var importError: String?
     
+    /// 是否在有效的应用包环境中运行
+    private var isValidAppBundle: Bool {
+        Bundle.main.bundleIdentifier != nil && Bundle.main.bundleURL.pathExtension == "app"
+    }
+    
     var body: some View {
         Form {
             // 权限状态（置顶）
@@ -18,7 +23,18 @@ struct GeneralSettingsView: View {
             // 功能开关
             Section {
                 Toggle("启用长按退出", isOn: $appState.isEnabled)
-                Toggle("开机自动启动", isOn: $appState.launchAtLogin)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("开机自动启动", isOn: $appState.launchAtLogin)
+                        .disabled(!isValidAppBundle)
+                    
+                    if !isValidAppBundle {
+                        Text("需要构建为 .app 包后才能使用")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                
                 Toggle("显示进度动画", isOn: $appState.showProgressAnimation)
             }
             

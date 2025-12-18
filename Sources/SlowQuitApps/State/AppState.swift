@@ -21,7 +21,11 @@ final class AppState {
     
     /// 是否开机自启
     var launchAtLogin: Bool {
-        didSet { saveConfig() }
+        didSet {
+            // 调用系统 API 设置开机启动
+            LaunchAtLoginManager.setEnabled(launchAtLogin)
+            saveConfig()
+        }
     }
     
     /// 是否显示进度条动画
@@ -51,7 +55,8 @@ final class AppState {
         let config = ConfigManager.shared.load()
         self.isEnabled = config.isEnabled
         self.holdDuration = config.holdDuration
-        self.launchAtLogin = config.launchAtLogin
+        // 读取系统实际状态，而非配置文件
+        self.launchAtLogin = LaunchAtLoginManager.isEnabled
         self.showProgressAnimation = config.showProgressAnimation
         self.excludedApps = config.excludedApps
     }

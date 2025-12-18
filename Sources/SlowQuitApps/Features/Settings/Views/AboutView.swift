@@ -48,7 +48,7 @@ struct AboutView: View {
             Spacer()
             
             // 版权信息
-            Text("© 2024 Slow Quit Apps")
+            Text("© 2025 Slow Quit Apps")
                 .font(.caption)
                 .foregroundColor(.gray)
                 .padding(.bottom, 20)
