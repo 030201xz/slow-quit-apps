@@ -1,7 +1,7 @@
 # Slow Quit Apps
 
 <p align="center">
-  <img src="Resources/AppIcon.icns" width="128" height="128" alt="Slow Quit Apps Иконка">
+  <img src="BuildAssets/AppIcon.png" width="128" height="128" alt="Slow Quit Apps Иконка">
 </p>
 
 <p align="center">

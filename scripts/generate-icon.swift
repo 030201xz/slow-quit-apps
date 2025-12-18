@@ -20,6 +20,7 @@ let sizes: [(size: Int, scale: Int, suffix: String)] = [
 ]
 
 /// 生成单个尺寸的图标
+/// 设计理念：Apple 风格 - 简洁、扁平、高辨识度
 func generateIcon(size: Int, scale: Int) -> NSImage {
     let pixelSize = size * scale
     let image = NSImage(size: NSSize(width: pixelSize, height: pixelSize))
@@ -35,29 +36,27 @@ func generateIcon(size: Int, scale: Int) -> NSImage {
     let padding = CGFloat(pixelSize) * 0.08
     let mainRect = rect.insetBy(dx: padding, dy: padding)
     
-    // 背景 - 圆角矩形渐变
+    // 背景 - 圆角矩形，macOS 系统蓝色
     let cornerRadius = CGFloat(pixelSize) * 0.22
     let bgPath = NSBezierPath(roundedRect: mainRect, xRadius: cornerRadius, yRadius: cornerRadius)
     
-    // 渐变背景：深蓝到紫色
-    let gradient = NSGradient(colors: [
-        NSColor(red: 0.2, green: 0.3, blue: 0.8, alpha: 1.0),
-        NSColor(red: 0.5, green: 0.2, blue: 0.7, alpha: 1.0)
-    ])
-    gradient?.draw(in: bgPath, angle: -45)
+    // 纯净的系统蓝色背景（Apple 标准蓝）
+    let systemBlue = NSColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0)
+    systemBlue.setFill()
+    bgPath.fill()
     
     // 中心圆环背景
     let center = CGPoint(x: CGFloat(pixelSize) / 2, y: CGFloat(pixelSize) / 2)
     let ringRadius = CGFloat(pixelSize) * 0.28
-    let ringWidth = CGFloat(pixelSize) * 0.06
+    let ringWidth = CGFloat(pixelSize) * 0.05
     
-    // 圆环背景（半透明白色）
-    context.setStrokeColor(NSColor.white.withAlphaComponent(0.3).cgColor)
+    // 圆环背景（半透明白色轨道）
+    context.setStrokeColor(NSColor.white.withAlphaComponent(0.25).cgColor)
     context.setLineWidth(ringWidth)
     context.addArc(center: center, radius: ringRadius, startAngle: 0, endAngle: .pi * 2, clockwise: false)
     context.strokePath()
     
-    // 进度圆弧（约 75%）
+    // 进度圆弧（75% 白色）
     context.setStrokeColor(NSColor.white.cgColor)
     context.setLineWidth(ringWidth)
     context.setLineCap(.round)
@@ -66,9 +65,9 @@ func generateIcon(size: Int, scale: Int) -> NSImage {
     context.addArc(center: center, radius: ringRadius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
     context.strokePath()
     
-    // 中心 Q 字母
-    let fontSize = CGFloat(pixelSize) * 0.32
-    let font = NSFont.systemFont(ofSize: fontSize, weight: .bold)
+    // 中心 Q 字母（SF Pro 风格）
+    let fontSize = CGFloat(pixelSize) * 0.30
+    let font = NSFont.systemFont(ofSize: fontSize, weight: .semibold)
     let qText = "Q" as NSString
     
     let textAttributes: [NSAttributedString.Key: Any] = [
@@ -125,14 +124,14 @@ for (size, scale, suffix) in sizes {
 print("📦 转换为 icns 格式...")
 let process = Process()
 process.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
-process.arguments = ["-c", "icns", iconsetDir, "-o", "Resources/AppIcon.icns"]
+process.arguments = ["-c", "icns", iconsetDir, "-o", "BuildAssets/AppIcon.icns"]
 
 do {
     try process.run()
     process.waitUntilExit()
     
     if process.terminationStatus == 0 {
-        print("✅ 图标已生成: Resources/AppIcon.icns")
+        print("✅ 图标已生成: BuildAssets/AppIcon.icns")
     } else {
         print("❌ iconutil 失败")
     }
