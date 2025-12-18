@@ -36,7 +36,7 @@
 
 ## 必要条件
 
-- macOS 15.0 (Sequoia) 以降
+- macOS 14.0 (Sonoma) 以降
 - アクセシビリティ権限が必要
 
 ## インストール
@@ -114,7 +114,7 @@ cd slow-quit-apps
 ### 前提条件
 
 - Xcode 16.0+ または Swift 6.0+
-- macOS 15.0+
+- macOS 14.0+
 
 ### ビルドコマンド
 

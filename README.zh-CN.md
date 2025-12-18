@@ -36,7 +36,7 @@
 
 ## 系统要求
 
-- macOS 15.0 (Sequoia) 或更高版本
+- macOS 14.0 (Sonoma) 或更高版本
 - 需要辅助功能权限
 
 ## 安装
@@ -114,7 +114,7 @@ cd slow-quit-apps
 ### 前置要求
 
 - Xcode 16.0+ 或 Swift 6.0+
-- macOS 15.0+
+- macOS 14.0+
 
 ### 构建命令
 

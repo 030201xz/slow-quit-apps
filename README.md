@@ -36,7 +36,7 @@
 
 ## Requirements
 
-- macOS 15.0 (Sequoia) or later
+- macOS 14.0 (Sonoma) or later
 - Accessibility permission required
 
 ## Installation
@@ -114,7 +114,7 @@ Configuration is stored at:
 ### Prerequisites
 
 - Xcode 16.0+ or Swift 6.0+
-- macOS 15.0+
+- macOS 14.0+
 
 ### Build Commands
 
