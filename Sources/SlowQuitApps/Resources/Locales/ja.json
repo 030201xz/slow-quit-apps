@@ -52,6 +52,7 @@
   "accessibility": {
     "granted": "権限が付与されました",
     "notGranted": "権限が必要です",
-    "openSettings": "システム設定を開く"
+    "openSettings": "システム設定を開く",
+    "restartApp": "アプリを再起動"
   }
 }

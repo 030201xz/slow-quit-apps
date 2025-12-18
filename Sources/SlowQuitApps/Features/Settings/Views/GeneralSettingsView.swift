@@ -152,11 +152,19 @@ struct AccessibilityStatusRow: View {
                 Text(t("accessibility.granted"))
                     .foregroundStyle(.green)
             } else {
-                Button(t("accessibility.openSettings")) {
-                    AccessibilityManager.shared.openAccessibilitySettings()
+                HStack(spacing: 8) {
+                    Button(t("accessibility.openSettings")) {
+                        AccessibilityManager.shared.openAccessibilitySettings()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    
+                    Button(t("accessibility.restartApp")) {
+                        restartApplication()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
             }
         } label: {
             Label(
@@ -167,6 +175,22 @@ struct AccessibilityStatusRow: View {
         .foregroundStyle(isEnabled ? Color.primary : Color.orange)
         .onAppear {
             isEnabled = AccessibilityManager.shared.isAccessibilityEnabled
+        }
+    }
+    
+    /// 重启应用
+    private func restartApplication() {
+        guard let bundleURL = Bundle.main.bundleURL as URL? else { return }
+        
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        task.arguments = ["-n", bundleURL.path]
+        
+        try? task.run()
+        
+        // 延迟退出当前实例
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            NSApplication.shared.terminate(nil)
         }
     }
 }

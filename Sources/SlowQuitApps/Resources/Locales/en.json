@@ -52,6 +52,7 @@
   "accessibility": {
     "granted": "Permission Granted",
     "notGranted": "Permission Required",
-    "openSettings": "Open System Settings"
+    "openSettings": "Open System Settings",
+    "restartApp": "Restart App"
   }
 }

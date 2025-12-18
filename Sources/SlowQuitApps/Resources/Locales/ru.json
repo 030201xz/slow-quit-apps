@@ -52,6 +52,7 @@
   "accessibility": {
     "granted": "Разрешение получено",
     "notGranted": "Требуется разрешение",
-    "openSettings": "Открыть настройки системы"
+    "openSettings": "Открыть настройки системы",
+    "restartApp": "Перезапустить"
   }
 }
