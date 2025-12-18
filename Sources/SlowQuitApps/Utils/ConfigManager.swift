@@ -7,8 +7,36 @@ struct Config: Codable, Sendable {
     var launchAtLogin: Bool = false
     var showProgressAnimation: Bool = true
     var excludedApps: [ManagedApp] = ManagedApp.systemDefaults
+    var language: Language = .en
     
     static let `default` = Config()
+    
+    // 自定义解码，支持旧配置文件缺少字段的情况
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
+        holdDuration = try container.decodeIfPresent(Double.self, forKey: .holdDuration) ?? 1.0
+        launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
+        showProgressAnimation = try container.decodeIfPresent(Bool.self, forKey: .showProgressAnimation) ?? true
+        excludedApps = try container.decodeIfPresent([ManagedApp].self, forKey: .excludedApps) ?? ManagedApp.systemDefaults
+        language = try container.decodeIfPresent(Language.self, forKey: .language) ?? .en
+    }
+    
+    init(
+        isEnabled: Bool = true,
+        holdDuration: Double = 1.0,
+        launchAtLogin: Bool = false,
+        showProgressAnimation: Bool = true,
+        excludedApps: [ManagedApp] = ManagedApp.systemDefaults,
+        language: Language = .en
+    ) {
+        self.isEnabled = isEnabled
+        self.holdDuration = holdDuration
+        self.launchAtLogin = launchAtLogin
+        self.showProgressAnimation = showProgressAnimation
+        self.excludedApps = excludedApps
+        self.language = language
+    }
 }
 
 /// JSON 配置文件管理器

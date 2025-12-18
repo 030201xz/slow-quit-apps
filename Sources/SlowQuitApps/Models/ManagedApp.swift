@@ -37,6 +37,5 @@ extension ManagedApp {
     static let systemDefaults: [ManagedApp] = [
         ManagedApp(bundleIdentifier: "com.apple.finder", name: "Finder"),
         ManagedApp(bundleIdentifier: "com.apple.Terminal", name: "终端"),
-        ManagedApp(bundleIdentifier: "com.googlecode.iterm2", name: "iTerm")
     ]
 }

@@ -2,7 +2,12 @@ import SwiftUI
 
 /// 关于页面视图
 struct AboutView: View {
+    @State private var i18n = I18n.shared
+    
     var body: some View {
+        // 通过访问 currentLanguage 确保语言变化时视图刷新
+        let _ = i18n.currentLanguage
+        
         VStack(spacing: 20) {
             // 应用图标
             Image(systemName: "hand.raised.circle.fill")
@@ -15,17 +20,17 @@ struct AboutView: View {
             
             // 应用名称和版本
             VStack(spacing: 4) {
-                Text(Constants.App.name)
+                Text(t("app.name"))
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text("版本 \(Constants.App.version)")
+                Text("\(t("settings.about.version")) \(Constants.App.version)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
             
             // 应用描述
-            Text("防止意外按下 ⌘Q 导致应用退出的小工具")
+            Text(t("app.description"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -35,14 +40,14 @@ struct AboutView: View {
             
             // 功能说明
             VStack(alignment: .leading, spacing: 10) {
-                FeatureRow(icon: "keyboard", text: "监听 ⌘Q 快捷键")
-                FeatureRow(icon: "timer", text: "需要长按才能退出应用")
-                FeatureRow(icon: "list.bullet", text: "支持应用白名单")
-                FeatureRow(icon: "gearshape", text: "自定义长按时间")
+                FeatureRow(icon: "keyboard", text: t("settings.about.features.monitor"))
+                FeatureRow(icon: "timer", text: t("settings.about.features.longPress"))
+                FeatureRow(icon: "list.bullet", text: t("settings.about.features.whitelist"))
+                FeatureRow(icon: "gearshape", text: t("settings.about.features.customize"))
             }
             
             // 版权信息
-            Text("© 2025 Slow Quit Apps")
+            Text(t("settings.about.copyright"))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .padding(.top, 8)
@@ -68,3 +73,4 @@ struct FeatureRow: View {
         }
     }
 }
+

@@ -14,7 +14,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "SlowQuitApps",
-            path: "Sources/SlowQuitApps"
+            path: "Sources/SlowQuitApps",
+            resources: [
+                .copy("Resources/Locales")
+            ]
         )
     ]
 )

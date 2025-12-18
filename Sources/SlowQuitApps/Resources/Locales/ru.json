@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "Slow Quit Apps",
+    "description": "Предотвращает случайное закрытие приложений при нажатии ⌘Q"
+  },
+  "settings": {
+    "tabs": {
+      "general": "Основные",
+      "appList": "Приложения",
+      "about": "О программе"
+    },
+    "general": {
+      "accessibilityStatus": "Статус доступности",
+      "enableLongPress": "Включить долгое нажатие для выхода",
+      "launchAtLogin": "Запускать при входе",
+      "launchAtLoginDisabled": "Требуется сборка в виде .app",
+      "showProgressAnimation": "Показывать анимацию прогресса",
+      "holdDuration": "Время удержания",
+      "seconds": "сек",
+      "configManagement": "Управление конфигурацией",
+      "export": "Экспорт",
+      "import": "Импорт",
+      "resetDefaults": "Сброс настроек",
+      "importFailed": "Ошибка импорта",
+      "ok": "ОК"
+    },
+    "language": {
+      "title": "Язык"
+    },
+    "appList": {
+      "title": "Исключения",
+      "description": "Эти приложения можно закрыть без долгого нажатия",
+      "add": "Добавить",
+      "empty": "Нет исключённых приложений",
+      "emptyDescription": "Нажмите «Добавить» для добавления",
+      "selectApp": "Выбрать приложение",
+      "cancel": "Отмена",
+      "search": "Поиск приложений...",
+      "loading": "Загрузка списка приложений..."
+    },
+    "about": {
+      "version": "Версия",
+      "features": {
+        "monitor": "Отслеживание сочетания ⌘Q",
+        "longPress": "Требуется долгое нажатие для выхода",
+        "whitelist": "Поддержка белого списка",
+        "customize": "Настройка времени удержания"
+      },
+      "copyright": "© 2025 Slow Quit Apps"
+    }
+  },
+  "accessibility": {
+    "granted": "Разрешение получено",
+    "notGranted": "Требуется разрешение",
+    "openSettings": "Открыть настройки системы"
+  }
+}

@@ -38,6 +38,14 @@ final class AppState {
         didSet { saveConfig() }
     }
     
+    /// 当前语言
+    var language: Language {
+        didSet {
+            I18n.shared.setLanguage(language)
+            saveConfig()
+        }
+    }
+    
     // MARK: - 运行时状态（不持久化）
     
     /// 当前正在退出的进度（0.0 - 1.0）
@@ -59,6 +67,10 @@ final class AppState {
         self.launchAtLogin = LaunchAtLoginManager.isEnabled
         self.showProgressAnimation = config.showProgressAnimation
         self.excludedApps = config.excludedApps
+        self.language = config.language
+        
+        // 初始化时同步语言到 I18n 引擎
+        I18n.shared.setLanguage(config.language)
     }
     
     // MARK: - 持久化
@@ -69,7 +81,8 @@ final class AppState {
             holdDuration: holdDuration,
             launchAtLogin: launchAtLogin,
             showProgressAnimation: showProgressAnimation,
-            excludedApps: excludedApps
+            excludedApps: excludedApps,
+            language: language
         )
         ConfigManager.shared.save(config)
     }
@@ -132,6 +145,7 @@ final class AppState {
         launchAtLogin = config.launchAtLogin
         showProgressAnimation = config.showProgressAnimation
         excludedApps = config.excludedApps
+        language = config.language
     }
     
     // MARK: - 导入/导出
@@ -147,5 +161,6 @@ final class AppState {
         launchAtLogin = config.launchAtLogin
         showProgressAnimation = config.showProgressAnimation
         excludedApps = config.excludedApps
+        language = config.language
     }
 }

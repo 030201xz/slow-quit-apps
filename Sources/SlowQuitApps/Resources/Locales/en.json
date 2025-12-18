@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "Slow Quit Apps",
+    "description": "Prevent accidental app quits by requiring long press on ⌘Q"
+  },
+  "settings": {
+    "tabs": {
+      "general": "General",
+      "appList": "App List",
+      "about": "About"
+    },
+    "general": {
+      "accessibilityStatus": "Accessibility Status",
+      "enableLongPress": "Enable long press to quit",
+      "launchAtLogin": "Launch at login",
+      "launchAtLoginDisabled": "Requires building as .app bundle",
+      "showProgressAnimation": "Show progress animation",
+      "holdDuration": "Hold duration",
+      "seconds": "seconds",
+      "configManagement": "Configuration",
+      "export": "Export",
+      "import": "Import",
+      "resetDefaults": "Reset to Defaults",
+      "importFailed": "Import Failed",
+      "ok": "OK"
+    },
+    "language": {
+      "title": "Language"
+    },
+    "appList": {
+      "title": "Excluded Apps",
+      "description": "These apps can quit directly without long press",
+      "add": "Add",
+      "empty": "No excluded apps",
+      "emptyDescription": "Click \"Add\" to add apps",
+      "selectApp": "Select App",
+      "cancel": "Cancel",
+      "search": "Search apps...",
+      "loading": "Loading apps..."
+    },
+    "about": {
+      "version": "Version",
+      "features": {
+        "monitor": "Monitor ⌘Q shortcut",
+        "longPress": "Require long press to quit",
+        "whitelist": "Support app whitelist",
+        "customize": "Customize hold duration"
+      },
+      "copyright": "© 2025 Slow Quit Apps"
+    }
+  },
+  "accessibility": {
+    "granted": "Permission Granted",
+    "notGranted": "Permission Required",
+    "openSettings": "Open System Settings"
+  }
+}

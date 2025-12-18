@@ -4,16 +4,20 @@ import SwiftUI
 /// 管理排除列表（白名单）
 struct AppListSettingsView: View {
     @Bindable var appState = AppState.shared
+    @State private var i18n = I18n.shared
     @State private var showingAppPicker = false
     
     var body: some View {
+        // 通过访问 currentLanguage 确保语言变化时视图刷新
+        let _ = i18n.currentLanguage
+        
         VStack(spacing: 0) {
             // 顶部说明
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("排除列表")
+                    Text(t("settings.appList.title"))
                         .font(.headline)
-                    Text("以下应用无需长按即可直接退出")
+                    Text(t("settings.appList.description"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -23,7 +27,7 @@ struct AppListSettingsView: View {
                 Button {
                     showingAppPicker = true
                 } label: {
-                    Label("添加", systemImage: "plus")
+                    Label(t("settings.appList.add"), systemImage: "plus")
                 }
             }
             .padding()
@@ -49,9 +53,9 @@ struct AppListSettingsView: View {
     
     private var emptyStateView: some View {
         ContentUnavailableView(
-            "暂无排除应用",
+            t("settings.appList.empty"),
             systemImage: "app.badge.checkmark",
-            description: Text("点击「添加」按钮来添加应用")
+            description: Text(t("settings.appList.emptyDescription"))
         )
     }
     
@@ -152,23 +156,26 @@ struct InstalledAppPicker: View {
     let onSelect: (ManagedApp) -> Void
     let onCancel: () -> Void
     
+    @State private var i18n = I18n.shared
     @State private var searchText = ""
     @State private var installedApps: [AppInfo] = []
     @State private var isLoading = true
     
     var body: some View {
+        let _ = i18n.currentLanguage
+        
         VStack(spacing: 0) {
             // 标题栏
             HStack {
-                Text("选择应用")
+                Text(t("settings.appList.selectApp"))
                     .font(.headline)
                 Spacer()
-                Button("取消", action: onCancel)
+                Button(t("settings.appList.cancel"), action: onCancel)
             }
             .padding()
             
             // 搜索框
-            TextField("搜索应用...", text: $searchText)
+            TextField(t("settings.appList.search"), text: $searchText)
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal)
             
@@ -177,7 +184,7 @@ struct InstalledAppPicker: View {
             
             // 应用列表
             if isLoading {
-                ProgressView("正在加载应用列表...")
+                ProgressView(t("settings.appList.loading"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(filteredApps, id: \.bundleIdentifier) { app in

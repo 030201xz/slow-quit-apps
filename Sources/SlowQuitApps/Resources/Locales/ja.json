@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "Slow Quit Apps",
+    "description": "⌘Qの誤操作によるアプリ終了を防止するツール"
+  },
+  "settings": {
+    "tabs": {
+      "general": "一般",
+      "appList": "アプリ一覧",
+      "about": "情報"
+    },
+    "general": {
+      "accessibilityStatus": "アクセシビリティ状態",
+      "enableLongPress": "長押しで終了を有効化",
+      "launchAtLogin": "ログイン時に起動",
+      "launchAtLoginDisabled": ".appバンドルとしてビルドする必要があります",
+      "showProgressAnimation": "進行アニメーションを表示",
+      "holdDuration": "長押し時間",
+      "seconds": "秒",
+      "configManagement": "設定管理",
+      "export": "エクスポート",
+      "import": "インポート",
+      "resetDefaults": "デフォルトに戻す",
+      "importFailed": "インポート失敗",
+      "ok": "OK"
+    },
+    "language": {
+      "title": "言語"
+    },
+    "appList": {
+      "title": "除外リスト",
+      "description": "以下のアプリは長押しなしで直接終了できます",
+      "add": "追加",
+      "empty": "除外アプリなし",
+      "emptyDescription": "「追加」をクリックしてアプリを追加",
+      "selectApp": "アプリを選択",
+      "cancel": "キャンセル",
+      "search": "アプリを検索...",
+      "loading": "アプリ一覧を読み込み中..."
+    },
+    "about": {
+      "version": "バージョン",
+      "features": {
+        "monitor": "⌘Qショートカットを監視",
+        "longPress": "アプリ終了に長押しが必要",
+        "whitelist": "アプリホワイトリストをサポート",
+        "customize": "長押し時間をカスタマイズ"
+      },
+      "copyright": "© 2025 Slow Quit Apps"
+    }
+  },
+  "accessibility": {
+    "granted": "権限が付与されました",
+    "notGranted": "権限が必要です",
+    "openSettings": "システム設定を開く"
+  }
+}

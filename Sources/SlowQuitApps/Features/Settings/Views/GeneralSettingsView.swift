@@ -4,6 +4,10 @@ import UniformTypeIdentifiers
 /// 通用设置视图
 struct GeneralSettingsView: View {
     @Bindable var appState = AppState.shared
+    
+    /// 用于响应语言变化触发 UI 刷新
+    @State private var i18n = I18n.shared
+    
     @State private var showingExporter = false
     @State private var showingImporter = false
     @State private var importError: String?
@@ -14,34 +18,46 @@ struct GeneralSettingsView: View {
     }
     
     var body: some View {
+        // 通过访问 currentLanguage 确保语言变化时视图刷新
+        let _ = i18n.currentLanguage
+        
         Form {
             // 权限状态（置顶）
             Section {
                 AccessibilityStatusRow()
             }
             
+            // 语言设置
+            Section {
+                Picker(t("settings.language.title"), selection: $appState.language) {
+                    ForEach(Language.allCases, id: \.self) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+            }
+            
             // 功能开关
             Section {
-                Toggle("启用长按退出", isOn: $appState.isEnabled)
+                Toggle(t("settings.general.enableLongPress"), isOn: $appState.isEnabled)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Toggle("开机自动启动", isOn: $appState.launchAtLogin)
+                    Toggle(t("settings.general.launchAtLogin"), isOn: $appState.launchAtLogin)
                         .disabled(!isValidAppBundle)
                     
                     if !isValidAppBundle {
-                        Text("需要构建为 .app 包后才能使用")
+                        Text(t("settings.general.launchAtLoginDisabled"))
                             .font(.caption)
                             .foregroundStyle(.orange)
                     }
                 }
                 
-                Toggle("显示进度动画", isOn: $appState.showProgressAnimation)
+                Toggle(t("settings.general.showProgressAnimation"), isOn: $appState.showProgressAnimation)
             }
             
             // 长按时间
             Section {
-                LabeledContent("长按时间") {
-                    Text(String(format: "%.1f 秒", appState.holdDuration))
+                LabeledContent(t("settings.general.holdDuration")) {
+                    Text(String(format: "%.1f \(t("settings.general.seconds"))", appState.holdDuration))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
@@ -54,14 +70,14 @@ struct GeneralSettingsView: View {
             }
             
             // 配置管理
-            Section("配置管理") {
+            Section(t("settings.general.configManagement")) {
                 HStack {
-                    Button("导出") { showingExporter = true }
+                    Button(t("settings.general.export")) { showingExporter = true }
                     Divider().frame(height: 16)
-                    Button("导入") { showingImporter = true }
+                    Button(t("settings.general.import")) { showingImporter = true }
                 }
                 
-                Button("恢复默认设置", role: .destructive) {
+                Button(t("settings.general.resetDefaults"), role: .destructive) {
                     appState.resetToDefaults()
                 }
             }
@@ -94,8 +110,8 @@ struct GeneralSettingsView: View {
                 importError = error.localizedDescription
             }
         }
-        .alert("导入失败", isPresented: .constant(importError != nil)) {
-            Button("确定") { importError = nil }
+        .alert(t("settings.general.importFailed"), isPresented: .constant(importError != nil)) {
+            Button(t("settings.general.ok")) { importError = nil }
         } message: {
             Text(importError ?? "")
         }
@@ -126,14 +142,17 @@ struct ConfigDocument: FileDocument {
 
 struct AccessibilityStatusRow: View {
     @State private var isEnabled = AccessibilityManager.shared.isAccessibilityEnabled
+    @State private var i18n = I18n.shared
     
     var body: some View {
+        let _ = i18n.currentLanguage
+        
         LabeledContent {
             if isEnabled {
-                Text("已启用")
+                Text(t("accessibility.granted"))
                     .foregroundStyle(.green)
             } else {
-                Button("授权") {
+                Button(t("accessibility.openSettings")) {
                     AccessibilityManager.shared.openAccessibilitySettings()
                 }
                 .buttonStyle(.borderedProminent)
@@ -141,7 +160,7 @@ struct AccessibilityStatusRow: View {
             }
         } label: {
             Label(
-                "无障碍权限",
+                t("settings.general.accessibilityStatus"),
                 systemImage: isEnabled ? "checkmark.shield.fill" : "exclamationmark.shield"
             )
         }
