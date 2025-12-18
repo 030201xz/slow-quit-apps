@@ -83,8 +83,8 @@ EOF
 echo -n "APPL????" > "${APP_DIR}/Contents/PkgInfo"
 
 # 7. 如果存在图标，复制图标
-if [ -f "Resources/AppIcon.icns" ]; then
-    cp "Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/"
+if [ -f "BuildAssets/AppIcon.icns" ]; then
+    cp "BuildAssets/AppIcon.icns" "${APP_DIR}/Contents/Resources/"
     echo -e "${GREEN}✓ 已复制应用图标${NC}"
 fi
 
@@ -109,7 +109,7 @@ if command -v create-dmg &> /dev/null || command -v hdiutil &> /dev/null; then
     ln -s /Applications "${DMG_TEMP}/Applications"
     
     # 复制多语言安装文档
-    DOCS_DIR="Resources/Docs"
+    DOCS_DIR="BuildAssets/Docs"
     if [ -d "${DOCS_DIR}" ]; then
         echo -e "${YELLOW}📖 复制安装文档...${NC}"
         mkdir -p "${DMG_TEMP}/Documentation"
