@@ -54,12 +54,19 @@ final class QuitProgressController: KeyEventDelegate {
         guard let app = NSWorkspace.shared.frontmostApplication,
               let bundleId = app.bundleIdentifier else { return }
         
+        // 调试：打印当前应用和排除状态
+        let isExcluded = appState.isAppExcluded(bundleId)
+        print("🔍 检测到 Cmd+Q: \(app.localizedName ?? "未知") [\(bundleId)] 排除状态: \(isExcluded)")
+        print("📋 排除列表: \(appState.excludedApps.map { "\($0.bundleIdentifier):\($0.isExcluded)" })")
+        
         // 白名单应用直接退出
-        if appState.isAppExcluded(bundleId) {
+        if isExcluded {
+            print("⚡ 直接退出（已排除）")
             app.terminate()
             return
         }
         
+        print("⏱️ 开始计时...")
         // 开始计时
         startTimer(for: app)
     }
