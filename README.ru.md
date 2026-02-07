@@ -51,7 +51,7 @@
 ### Из исходного кода
 
 ```bash
-git clone https://github.com/yourusername/slow-quit-apps.git
+git clone https://github.com/030201xz/slow-quit-apps.git
 cd slow-quit-apps
 ./build.sh
 ```
