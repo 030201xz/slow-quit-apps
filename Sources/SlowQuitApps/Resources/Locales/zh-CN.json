@@ -1,7 +1,15 @@
 {
   "app": {
     "name": "Slow Quit Apps",
-    "description": "防止意外按下 ⌘Q 导致应用退出的小工具"
+    "description": "通过长按 ⌘Q / ⌘W 防止意外退出应用或关闭窗口"
+  },
+  "menu": {
+    "enable": "启用 ⌘Q",
+    "disable": "禁用 ⌘Q",
+    "enableW": "启用 ⌘W",
+    "disableW": "禁用 ⌘W",
+    "settings": "设置...",
+    "quit": "退出"
   },
   "settings": {
     "tabs": {
@@ -11,7 +19,8 @@
     },
     "general": {
       "accessibilityStatus": "辅助功能状态",
-      "enableLongPress": "启用长按退出",
+      "enableLongPress": "启用长按退出 (⌘Q)",
+      "closeWindowOnLongPress": "长按关闭窗口 (⌘W)",
       "launchAtLogin": "开机自动启动",
       "launchAtLoginDisabled": "需要构建为 .app 包后才能使用",
       "showProgressAnimation": "显示进度动画",
@@ -41,8 +50,8 @@
     "about": {
       "version": "版本",
       "features": {
-        "monitor": "监听 ⌘Q 快捷键",
-        "longPress": "需要长按才能退出应用",
+        "monitor": "监听 ⌘Q 和 ⌘W 快捷键",
+        "longPress": "需要长按才能退出应用或关闭窗口",
         "whitelist": "支持应用白名单",
         "customize": "自定义长按时间"
       },

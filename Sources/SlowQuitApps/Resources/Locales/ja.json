@@ -1,7 +1,15 @@
 {
   "app": {
     "name": "Slow Quit Apps",
-    "description": "⌘Qの誤操作によるアプリ終了を防止するツール"
+    "description": "⌘Q / ⌘W の長押しで誤操作によるアプリ終了・ウィンドウ閉じを防止するツール"
+  },
+  "menu": {
+    "enable": "⌘Q を有効化",
+    "disable": "⌘Q を無効化",
+    "enableW": "⌘W を有効化",
+    "disableW": "⌘W を無効化",
+    "settings": "設定...",
+    "quit": "終了"
   },
   "settings": {
     "tabs": {
@@ -11,7 +19,8 @@
     },
     "general": {
       "accessibilityStatus": "アクセシビリティ状態",
-      "enableLongPress": "長押しで終了を有効化",
+      "enableLongPress": "長押しで終了を有効化 (⌘Q)",
+      "closeWindowOnLongPress": "長押しでウィンドウを閉じる (⌘W)",
       "launchAtLogin": "ログイン時に起動",
       "launchAtLoginDisabled": ".appバンドルとしてビルドする必要があります",
       "showProgressAnimation": "進行アニメーションを表示",
@@ -41,8 +50,8 @@
     "about": {
       "version": "バージョン",
       "features": {
-        "monitor": "⌘Qショートカットを監視",
-        "longPress": "アプリ終了に長押しが必要",
+        "monitor": "⌘Q / ⌘W ショートカットを監視",
+        "longPress": "終了・ウィンドウ閉じに長押しが必要",
         "whitelist": "アプリホワイトリストをサポート",
         "customize": "長押し時間をカスタマイズ"
       },

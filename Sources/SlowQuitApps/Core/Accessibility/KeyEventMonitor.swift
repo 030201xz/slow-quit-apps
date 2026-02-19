@@ -1,90 +1,110 @@
 import Cocoa
 import Carbon.HIToolbox
 
-/// 键盘事件类型
+/// Keyboard event type
 enum KeyEventType: Sendable {
     case keyDown
     case keyUp
-    case flagsChanged  // 修饰键变化
+    case flagsChanged  // modifier key change
 }
 
-/// 键盘事件信息
+/// Keyboard event data
 struct KeyEvent: Sendable {
     let keyCode: UInt16
     let modifiers: UInt
     let type: KeyEventType
     let timestamp: Date
-    
-    /// 是否按住 Command 键
+
+    /// Whether Command is held
     var hasCommandModifier: Bool {
         (modifiers & NSEvent.ModifierFlags.command.rawValue) != 0
     }
-    
-    /// 是否是 Q 键
+
+    /// Whether the key is Q
     var isQKey: Bool {
         keyCode == Constants.Keyboard.qKeyCode
     }
-    
-    /// 是否是 Command + Q 组合键按下
+
+    /// Whether the key is W
+    var isWKey: Bool {
+        keyCode == Constants.Keyboard.wKeyCode
+    }
+
+    /// Whether Cmd+Q is pressed (any additional modifiers are allowed)
     var isCmdQDown: Bool {
         type == .keyDown && isQKey && hasCommandModifier
     }
+
+    /// Whether Cmd+W is pressed (any additional modifiers are allowed)
+    var isCmdWDown: Bool {
+        type == .keyDown && isWKey && hasCommandModifier
+    }
 }
 
-/// 键盘事件回调协议
+/// Keyboard event delegate protocol
 @MainActor
 protocol KeyEventDelegate: AnyObject {
-    /// 按键按下事件
+    /// Key down event
     func keyEventMonitor(_ monitor: KeyEventMonitor, didReceiveKeyDown event: KeyEvent)
-    /// 按键释放事件
+    /// Key up event
     func keyEventMonitor(_ monitor: KeyEventMonitor, didReceiveKeyUp event: KeyEvent)
 }
 
-/// 全局键盘事件监听器
-/// 使用 CGEvent Tap 监听全局键盘事件
+/// Global keyboard event monitor
+/// Uses CGEvent tap to intercept global keyboard events
 @MainActor
 final class KeyEventMonitor {
-    /// 单例实例
+    /// Shared instance
     static let shared = KeyEventMonitor()
-    
-    /// 事件代理
+
+    /// Event delegate
     weak var delegate: KeyEventDelegate?
-    
-    /// 事件监听器引用
+
+    /// Event tap reference
     private var eventTap: CFMachPort?
-    
-    /// 运行循环源
+
+    /// Run loop source
     private var runLoopSource: CFRunLoopSource?
-    
-    /// 是否正在监听
+
+    /// Whether the monitor is active
     private(set) var isMonitoring: Bool = false
-    
-    /// 是否正在进行 Cmd+Q 按压（Q键被按下且Cmd被按住）
-    private var isCmdQPressed: Bool = false
-    
+
+    /// Key code currently being intercepted (nil = none)
+    private var interceptingKeyCode: UInt16? = nil
+
     private init() {}
-    
-    // MARK: - 公开方法
-    
-    /// 开始监听键盘事件
+
+    // MARK: - Public
+
+    /// Start monitoring keyboard events
     func startMonitoring() {
         guard !isMonitoring else {
-            print("⚠️ 事件监听已在运行中")
+            print("⚠️ Monitor is already running")
             return
         }
-        
-        // 创建事件掩码：监听按键按下、释放和修饰键变化
-        let eventMask = (1 << CGEventType.keyDown.rawValue) 
+
+        // Track the frontmost app
+        KeyEventMonitorWrapper.shared.frontmostBundleID =
+            NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(activeAppChanged(_:)),
+            name: NSWorkspace.didActivateApplicationNotification,
+            object: nil
+        )
+
+        // Event mask: key down, key up, flags changed
+        let eventMask = (1 << CGEventType.keyDown.rawValue)
             | (1 << CGEventType.keyUp.rawValue)
             | (1 << CGEventType.flagsChanged.rawValue)
-        
-        // 创建监听器包装器
+
+        // Set up wrapper
         let wrapper = KeyEventMonitorWrapper.shared
         wrapper.monitor = self
-        
-        print("🔧 正在创建事件监听器...")
-        
-        // 创建事件监听器
+
+        print("🔧 Creating event tap...")
+
+        // Create event tap
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
@@ -93,94 +113,130 @@ final class KeyEventMonitor {
             callback: keyEventCallback,
             userInfo: Unmanaged.passUnretained(wrapper).toOpaque()
         ) else {
-            print("❌ 无法创建事件监听器，请检查无障碍权限")
+            print("❌ Failed to create event tap — check accessibility permission")
             return
         }
-        
+
         eventTap = tap
-        
-        // 创建运行循环源并添加到当前运行循环
+
+        // Add run loop source
         runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         guard let source = runLoopSource else {
-            print("❌ 无法创建运行循环源")
+            print("❌ Failed to create run loop source")
             return
         }
-        
+
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
-        
+
         isMonitoring = true
-        print("✅ 键盘事件监听已启动，正在拦截 Cmd+Q")
+        print("✅ Keyboard monitor started, intercepting Cmd+Q / Cmd+W")
     }
-    
-    /// 停止监听键盘事件
+
+    /// Stop monitoring keyboard events
     func stopMonitoring() {
         guard isMonitoring else { return }
-        
+
+        NSWorkspace.shared.notificationCenter.removeObserver(
+            self,
+            name: NSWorkspace.didActivateApplicationNotification,
+            object: nil
+        )
+
         if let tap = eventTap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
-        
+
         if let source = runLoopSource {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
         }
-        
+
         eventTap = nil
         runLoopSource = nil
         isMonitoring = false
-        isCmdQPressed = false
-        
-        print("🛑 键盘事件监听已停止")
+        interceptingKeyCode = nil
+
+        print("🛑 Keyboard monitor stopped")
     }
-    
-    /// 重新启用事件监听
+
+    @objc private func activeAppChanged(_ notification: Notification) {
+        let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+        KeyEventMonitorWrapper.shared.frontmostBundleID = app?.bundleIdentifier ?? ""
+    }
+
+    /// Update excluded app bundle IDs
+    func setExcludedApps(_ bundleIDs: Set<String>) {
+        KeyEventMonitorWrapper.shared.excludedBundleIDs = bundleIDs
+    }
+
+    /// Update the close-window-on-long-press flag
+    func setCloseWindowOnLongPress(_ enabled: Bool) {
+        KeyEventMonitorWrapper.shared.closeWindowOnLongPress = enabled
+    }
+
+    /// Re-enable the event tap after timeout
     func reenableTap() {
         if let tap = eventTap {
             CGEvent.tapEnable(tap: tap, enable: true)
         }
     }
-    
-    /// 处理键盘事件
+
+    /// Handle a keyboard event
     func handleKeyEvent(_ keyEvent: KeyEvent) {
         switch keyEvent.type {
         case .keyDown:
-            // Cmd+Q 按下
-            if keyEvent.isCmdQDown {
-                isCmdQPressed = true
+            if keyEvent.isCmdQDown || keyEvent.isCmdWDown {
+                interceptingKeyCode = keyEvent.keyCode
                 delegate?.keyEventMonitor(self, didReceiveKeyDown: keyEvent)
             }
-            
+
         case .keyUp:
-            // Q 键释放
-            if keyEvent.isQKey && isCmdQPressed {
-                isCmdQPressed = false
+            if let code = interceptingKeyCode, keyEvent.keyCode == code {
+                interceptingKeyCode = nil
                 delegate?.keyEventMonitor(self, didReceiveKeyUp: keyEvent)
             }
-            
+
         case .flagsChanged:
-            // Cmd 键释放（修饰键变化）
-            if !keyEvent.hasCommandModifier && isCmdQPressed {
-                isCmdQPressed = false
+            if !keyEvent.hasCommandModifier && interceptingKeyCode != nil {
+                interceptingKeyCode = nil
                 delegate?.keyEventMonitor(self, didReceiveKeyUp: keyEvent)
             }
         }
     }
 }
 
-// MARK: - 监听器包装器（用于 C 回调）
+// MARK: - Wrapper (for C callback)
 
-/// 用于在 C 回调中访问 KeyEventMonitor 的包装器
+/// Wrapper for accessing KeyEventMonitor from the C callback
 final class KeyEventMonitorWrapper: @unchecked Sendable {
     static let shared = KeyEventMonitorWrapper()
-    
+
     weak var monitor: KeyEventMonitor?
-    
+
+    /// Excluded bundle IDs (written on main thread, read on C callback thread)
+    nonisolated(unsafe) var excludedBundleIDs: Set<String> = []
+
+    /// Bundle ID of the frontmost app (written on main thread, read on C callback thread)
+    nonisolated(unsafe) var frontmostBundleID: String = ""
+
+    /// Whether a key press is currently being intercepted
+    nonisolated(unsafe) var isIntercepting: Bool = false
+
+    /// Key code currently being intercepted
+    nonisolated(unsafe) var interceptedKeyCode: UInt16 = 0
+
+    /// Whether long-press-to-close-window (Cmd+W) is enabled
+    nonisolated(unsafe) var closeWindowOnLongPress: Bool = true
+
+    /// Key code to pass through after long press (prevents re-intercepting synthesized events)
+    nonisolated(unsafe) var passthroughKeyCode: UInt16 = 0
+
     private init() {}
 }
 
-// MARK: - C 回调函数
+// MARK: - C Callback
 
-/// CGEvent 回调函数
+/// CGEvent tap callback
 private func keyEventCallback(
     proxy: CGEventTapProxy,
     type: CGEventType,
@@ -190,10 +246,10 @@ private func keyEventCallback(
     guard let info = userInfo else {
         return Unmanaged.passRetained(event)
     }
-    
+
     let wrapper = Unmanaged<KeyEventMonitorWrapper>.fromOpaque(info).takeUnretainedValue()
-    
-    // 处理事件禁用通知
+
+    // Handle tap disabled notifications
     guard type == .keyDown || type == .keyUp || type == .flagsChanged else {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             DispatchQueue.main.async {
@@ -202,12 +258,12 @@ private func keyEventCallback(
         }
         return Unmanaged.passRetained(event)
     }
-    
-    // 获取按键码
+
+    // Extract key code and modifiers
     let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
     let modifiers = UInt(event.flags.rawValue)
-    
-    // 确定事件类型
+
+    // Map CGEventType to KeyEventType
     let eventType: KeyEventType
     switch type {
     case .keyDown: eventType = .keyDown
@@ -215,36 +271,58 @@ private func keyEventCallback(
     case .flagsChanged: eventType = .flagsChanged
     default: return Unmanaged.passRetained(event)
     }
-    
+
     let keyEvent = KeyEvent(
         keyCode: keyCode,
         modifiers: modifiers,
         type: eventType,
         timestamp: Date()
     )
-    
-    // 判断是否需要拦截
-    // 1. Cmd+Q keyDown 需要拦截
-    // 2. 如果正在进行 Cmd+Q，Q 的 keyUp 需要拦截
-    // 3. flagsChanged 不拦截（让其他应用正常响应）
-    
+
+    // Decide whether to intercept
+    // 1. Cmd+Q keyDown should be intercepted
+    // 2. keyUp for an intercepted key should also be intercepted
+    // 3. flagsChanged is never intercepted
+
     let shouldIntercept: Bool
     switch eventType {
     case .keyDown:
-        shouldIntercept = keyEvent.isCmdQDown
+        // Passthrough check: let synthesized events through after long press
+        if wrapper.passthroughKeyCode != 0 && keyCode == wrapper.passthroughKeyCode {
+            wrapper.passthroughKeyCode = 0
+            shouldIntercept = false
+        } else {
+            let excluded = wrapper.excludedBundleIDs.contains(wrapper.frontmostBundleID)
+            if keyEvent.isCmdQDown && !excluded {
+                wrapper.interceptedKeyCode = keyCode
+                wrapper.isIntercepting = true
+                shouldIntercept = true
+            } else if keyEvent.isCmdWDown && wrapper.closeWindowOnLongPress && !excluded {
+                wrapper.interceptedKeyCode = keyCode
+                wrapper.isIntercepting = true
+                shouldIntercept = true
+            } else {
+                shouldIntercept = false
+            }
+        }
     case .keyUp:
-        // Q 键释放时，如果正处于 Cmd+Q 状态则拦截
-        shouldIntercept = keyEvent.isQKey && keyEvent.hasCommandModifier
+        if keyCode == wrapper.interceptedKeyCode && wrapper.isIntercepting {
+            wrapper.isIntercepting = false
+            shouldIntercept = true
+        } else {
+            shouldIntercept = false
+        }
     case .flagsChanged:
-        // 修饰键变化不拦截，但需要处理
         shouldIntercept = false
     }
-    
-    // 在主线程通知代理
-    DispatchQueue.main.async {
-        wrapper.monitor?.handleKeyEvent(keyEvent)
+
+    // Notify delegate only for intercepted events
+    if shouldIntercept {
+        DispatchQueue.main.async {
+            wrapper.monitor?.handleKeyEvent(keyEvent)
+        }
     }
-    
-    // 返回 nil 拦截事件，否则传递
+
+    // Return nil to suppress the event, otherwise pass it through
     return shouldIntercept ? nil : Unmanaged.passRetained(event)
 }

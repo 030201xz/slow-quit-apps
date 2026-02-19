@@ -1,27 +1,27 @@
 import Foundation
 
-/// 受管理的应用模型
-/// 表示被排除（白名单）或特别处理的应用
+/// Managed app model
+/// Represents an app in the excluded list
 struct ManagedApp: Codable, Identifiable, Hashable, Sendable {
-    /// 应用的 Bundle Identifier
+    /// Bundle identifier
     let bundleIdentifier: String
-    
-    /// 应用显示名称
+
+    /// Display name
     let name: String
-    
-    /// 应用图标路径（可选）
+
+    /// Icon path (optional)
     let iconPath: String?
-    
-    /// 是否排除（不需要长按即可退出）
+
+    /// Whether the app is excluded from long-press interception
     var isExcluded: Bool
-    
+
     // MARK: - Identifiable
-    
+
     var id: String { bundleIdentifier }
-    
-    // MARK: - 便捷初始化
-    
-    /// 从运行中的应用创建
+
+    // MARK: - Init
+
+    /// Create from a running application
     init(bundleIdentifier: String, name: String, iconPath: String? = nil, isExcluded: Bool = true) {
         self.bundleIdentifier = bundleIdentifier
         self.name = name
@@ -30,12 +30,12 @@ struct ManagedApp: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
-// MARK: - 常用应用预设
+// MARK: - Presets
 
 extension ManagedApp {
-    /// 系统默认排除的应用列表
+    /// Default excluded apps
     static let systemDefaults: [ManagedApp] = [
         ManagedApp(bundleIdentifier: "com.apple.finder", name: "Finder"),
-        ManagedApp(bundleIdentifier: "com.apple.Terminal", name: "终端"),
+        ManagedApp(bundleIdentifier: "com.apple.Terminal", name: "Terminal"),
     ]
 }

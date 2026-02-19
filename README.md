@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Prevent accidental app quits by requiring long-press on ⌘Q</strong>
+  <strong>Prevent accidental quits and window closes by requiring long-press on ⌘Q / ⌘W</strong>
 </p>
 
 <p align="center">
@@ -27,17 +27,18 @@
 
 ## Features
 
-- 🛡️ **Prevent Accidental Quits** - Require holding ⌘Q to quit apps
-- ⏱️ **Customizable Duration** - Adjust hold time from 0.3s to 3.0s
-- 📋 **App Whitelist** - Exclude specific apps that can quit immediately
-- 🌐 **Multi-language Support** - English, Chinese, Japanese, Russian
-- 🎨 **Native macOS Design** - Seamless integration with system UI
-- 💾 **Persistent Settings** - Configuration saved to JSON file
+- 🛡️ **Prevent Accidental Quits** — Hold ⌘Q to quit; a brief tap does nothing
+- 🪟 **Prevent Accidental Window Closes** — Hold ⌘W to close a window; a brief tap does nothing
+- ⏱️ **Customizable Duration** — Adjust hold time from 0.3 s to 3.0 s
+- 📋 **App Exclusion List** — Exempt specific apps so they quit/close immediately
+- 🌐 **Multi-language** — English, Chinese (Simplified), Japanese, Russian
+- 🎨 **Native macOS Design** — Progress ring overlay blends with the system UI
+- 💾 **Persistent Settings** — Configuration saved to JSON
 
 ## Requirements
 
 - macOS 14.0 (Sonoma) or later
-- Accessibility permission required
+- Accessibility permission
 
 ## Installation
 
@@ -46,7 +47,7 @@
 1. Download the latest release from [Releases](../../releases)
 2. Open the DMG file
 3. Drag `SlowQuitApps.app` to the `Applications` folder
-4. Open the app and grant Accessibility permission
+4. Open the app and grant Accessibility permission when prompted
 
 ### From Source
 
@@ -61,44 +62,49 @@ cd slow-quit-apps
 ### First-Time Setup
 
 1. **Grant Accessibility Permission**
-   - Open the app → System Settings will open automatically
-   - Navigate to: **Privacy & Security → Accessibility**
+   - Open the app — System Settings opens automatically
+   - Go to: **Privacy & Security → Accessibility**
    - Toggle **SlowQuitApps** to ON
    - Click **Restart App** in the settings window
 
-2. **Configure Settings**
-   - Right-click the menu bar icon → **Settings**
-   - Adjust hold duration as needed
-   - Add apps to whitelist if desired
+2. **Configure in the menu bar**
+   - Click the menu bar icon
+   - **Enable ⌘Q** / **Disable ⌘Q** — toggles long-press-to-quit
+   - **Enable ⌘W** / **Disable ⌘W** — toggles long-press-to-close-window
+   - **Settings…** — adjust hold duration, exclusion list, language
 
 ### How It Works
 
 | Action | Result |
 |--------|--------|
-| Press ⌘Q briefly | Nothing happens (quit cancelled) |
-| Hold ⌘Q for configured duration | App quits |
-| Release ⌘Q early | Quit cancelled, progress resets |
-| ⌘Q on whitelisted app | Quits immediately |
+| Tap ⌘Q briefly | Nothing (quit cancelled) |
+| Hold ⌘Q for the set duration | App quits |
+| Release ⌘Q early | Quit cancelled, ring resets |
+| ⌘Q on an excluded app | Quits immediately |
+| Tap ⌘W briefly | Nothing (close cancelled) |
+| Hold ⌘W for the set duration | Window closes |
+| Release ⌘W early | Close cancelled, ring resets |
+| ⌘W on an excluded app | Closes immediately |
 
 ## Configuration
 
-### Settings Location
+### Settings File Location
 
-Configuration is stored at:
 ```
 ~/Library/Application Support/SlowQuitApps/config.json
 ```
 
 ### Available Options
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| `isEnabled` | Enable/disable the feature | `true` |
-| `holdDuration` | Time to hold ⌘Q (seconds) | `1.0` |
-| `launchAtLogin` | Start app on login | `false` |
+| Key | Description | Default |
+|-----|-------------|---------|
+| `quitOnLongPress` | Enable long-press for ⌘Q | `true` |
+| `closeWindowOnLongPress` | Enable long-press for ⌘W | `true` |
+| `holdDuration` | Hold time in seconds | `1.0` |
+| `launchAtLogin` | Start at login | `false` |
 | `showProgressAnimation` | Show progress ring | `true` |
 | `language` | UI language | `en` |
-| `excludedApps` | Whitelisted apps | System defaults |
+| `excludedApps` | Apps exempt from interception | Finder, Terminal |
 
 ### Supported Languages
 
@@ -122,11 +128,8 @@ Configuration is stored at:
 # Development build
 swift build
 
-# Release build with DMG
+# Release .app bundle (ad-hoc signed)
 ./build.sh
-
-# Generate app icon
-swift scripts/generate-icon.swift
 ```
 
 ### Project Structure
@@ -134,46 +137,39 @@ swift scripts/generate-icon.swift
 ```
 slow-quit-apps/
 ├── Sources/SlowQuitApps/
-│   ├── App/              # Application entry point
-│   ├── Core/             # Core functionality
-│   │   ├── Accessibility/  # Permission management
-│   │   └── QuitHandler/    # Quit progress UI
-│   ├── Features/         # Feature modules
-│   │   └── Settings/       # Settings window
-│   ├── Models/           # Data models
-│   ├── State/            # App state management
-│   ├── Utils/            # Utilities
-│   │   └── I18n/           # Internationalization
-│   └── Resources/        # Locale files
-├── Resources/            # App icon, docs
-└── scripts/              # Build scripts
+│   ├── App/              # Application entry point & menu bar
+│   ├── Core/
+│   │   ├── Accessibility/  # CGEvent tap, permission management
+│   │   └── QuitHandler/    # Progress ring UI & controller
+│   ├── Features/
+│   │   └── Settings/       # Settings window (General, App List, About)
+│   ├── Models/           # ManagedApp model
+│   ├── State/            # AppState (observable, persisted)
+│   ├── Utils/            # Config, LaunchAtLogin, I18n
+│   └── Resources/        # Locale JSON files
+└── BuildAssets/          # App icon, DMG docs
 ```
 
 ## Troubleshooting
 
 ### Accessibility Permission Resets After Rebuild
 
-This happens with ad-hoc signing. The build script includes a self-signed certificate mechanism to prevent this. Run:
+Ad-hoc signed apps lose their accessibility trust when the binary changes. After every rebuild, go to **System Settings → Privacy & Security → Accessibility**, remove SlowQuitApps, then add it back and restart the app.
 
-```bash
-./build.sh
-```
+### App Not Intercepting ⌘Q or ⌘W
 
-The first run will create a persistent signing certificate.
-
-### App Not Intercepting ⌘Q
-
-1. Check Accessibility permission is granted
+1. Confirm Accessibility permission is granted
 2. Click **Restart App** in settings
-3. Ensure the target app is not in the whitelist
+3. Make sure the target app is not in the exclusion list
+4. Check that the corresponding toggle (⌘Q or ⌘W) is enabled in the menu bar
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions are welcome. Please open an issue or pull request.
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 

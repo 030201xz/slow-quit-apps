@@ -4,7 +4,7 @@
 
 ### 1. Grant Accessibility Permission
 
-This app requires **Accessibility permission** to monitor keyboard shortcuts.
+This app requires **Accessibility permission** to monitor ⌘Q and ⌘W keyboard shortcuts.
 
 **How to enable:**
 1. Open the app, it will prompt for permission
@@ -27,8 +27,9 @@ When you first open the **App List** tab, macOS may ask for permission to access
 ## How It Works
 
 - Press and **hold** ⌘Q for the configured duration to quit apps
-- Release early to cancel the quit
-- Apps in the whitelist can quit immediately without holding
+- Press and **hold** ⌘W for the configured duration to close windows
+- Release early to cancel the action
+- Apps in the exclusion list can quit/close immediately without holding
 
 ## Quick Tips
 
