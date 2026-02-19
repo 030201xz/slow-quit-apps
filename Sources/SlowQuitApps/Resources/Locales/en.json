@@ -1,7 +1,15 @@
 {
   "app": {
     "name": "Slow Quit Apps",
-    "description": "Prevent accidental app quits by requiring long press on ⌘Q"
+    "description": "Prevent accidental quits and window closes by requiring long press on ⌘Q / ⌘W"
+  },
+  "menu": {
+    "enable": "Enable ⌘Q",
+    "disable": "Disable ⌘Q",
+    "enableW": "Enable ⌘W",
+    "disableW": "Disable ⌘W",
+    "settings": "Settings...",
+    "quit": "Quit"
   },
   "settings": {
     "tabs": {
@@ -11,7 +19,8 @@
     },
     "general": {
       "accessibilityStatus": "Accessibility Status",
-      "enableLongPress": "Enable long press to quit",
+      "enableLongPress": "Enable long press to quit (⌘Q)",
+      "closeWindowOnLongPress": "Enable long press to close window (⌘W)",
       "launchAtLogin": "Launch at login",
       "launchAtLoginDisabled": "Requires building as .app bundle",
       "showProgressAnimation": "Show progress animation",
@@ -41,8 +50,8 @@
     "about": {
       "version": "Version",
       "features": {
-        "monitor": "Monitor ⌘Q shortcut",
-        "longPress": "Require long press to quit",
+        "monitor": "Monitor ⌘Q and ⌘W shortcuts",
+        "longPress": "Require long press to quit or close window",
         "whitelist": "Support app whitelist",
         "customize": "Customize hold duration"
       },

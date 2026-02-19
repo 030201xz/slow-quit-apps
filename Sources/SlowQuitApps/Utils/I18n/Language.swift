@@ -1,14 +1,14 @@
 import Foundation
 
-/// 支持的语言类型
-/// 采用 ISO 639-1 标准语言代码
+/// Supported language
+/// Uses ISO 639-1 language codes
 enum Language: String, Codable, CaseIterable, Sendable {
     case en = "en"
     case zhCN = "zh-CN"
     case ja = "ja"
     case ru = "ru"
-    
-    /// 语言的本地化显示名称
+
+    /// Localized display name
     var displayName: String {
         switch self {
         case .en: "English"
@@ -17,8 +17,8 @@ enum Language: String, Codable, CaseIterable, Sendable {
         case .ru: "Русский"
         }
     }
-    
-    /// 对应的 JSON 文件名
+
+    /// Corresponding JSON locale filename
     var fileName: String {
         rawValue
     }

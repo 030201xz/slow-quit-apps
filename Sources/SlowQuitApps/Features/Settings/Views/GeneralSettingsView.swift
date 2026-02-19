@@ -1,33 +1,33 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// 通用设置视图
+/// General settings view
 struct GeneralSettingsView: View {
     @Bindable var appState = AppState.shared
-    
-    /// 用于响应语言变化触发 UI 刷新
+
+    /// Triggers UI refresh on language change
     @State private var i18n = I18n.shared
-    
+
     @State private var showingExporter = false
     @State private var showingImporter = false
     @State private var importError: String?
-    
-    /// 是否在有效的应用包环境中运行
+
+    /// Whether running inside a valid .app bundle
     private var isValidAppBundle: Bool {
         Bundle.main.bundleIdentifier != nil && Bundle.main.bundleURL.pathExtension == "app"
     }
-    
+
     var body: some View {
-        // 通过访问 currentLanguage 确保语言变化时视图刷新
+        // Access currentLanguage to trigger refresh on language change
         let _ = i18n.currentLanguage
-        
+
         Form {
-            // 权限状态（置顶）
+            // Accessibility status (top)
             Section {
                 AccessibilityStatusRow()
             }
-            
-            // 语言设置
+
+            // Language
             Section {
                 Picker(t("settings.language.title"), selection: $appState.language) {
                     ForEach(Language.allCases, id: \.self) { lang in
@@ -35,48 +35,50 @@ struct GeneralSettingsView: View {
                     }
                 }
             }
-            
-            // 功能开关
+
+            // Feature toggles
             Section {
-                Toggle(t("settings.general.enableLongPress"), isOn: $appState.isEnabled)
-                
+                Toggle(t("settings.general.enableLongPress"), isOn: $appState.quitOnLongPress)
+
+                Toggle(t("settings.general.closeWindowOnLongPress"), isOn: $appState.closeWindowOnLongPress)
+
                 VStack(alignment: .leading, spacing: 4) {
                     Toggle(t("settings.general.launchAtLogin"), isOn: $appState.launchAtLogin)
                         .disabled(!isValidAppBundle)
-                    
+
                     if !isValidAppBundle {
                         Text(t("settings.general.launchAtLoginDisabled"))
                             .font(.caption)
                             .foregroundStyle(.orange)
                     }
                 }
-                
+
                 Toggle(t("settings.general.showProgressAnimation"), isOn: $appState.showProgressAnimation)
             }
-            
-            // 长按时间
+
+            // Hold duration
             Section {
                 LabeledContent(t("settings.general.holdDuration")) {
                     Text(String(format: "%.1f \(t("settings.general.seconds"))", appState.holdDuration))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Slider(
                     value: $appState.holdDuration,
                     in: Constants.Progress.minHoldDuration...Constants.Progress.maxHoldDuration,
                     step: 0.1
                 )
             }
-            
-            // 配置管理
+
+            // Config management
             Section(t("settings.general.configManagement")) {
                 HStack {
                     Button(t("settings.general.export")) { showingExporter = true }
                     Divider().frame(height: 16)
                     Button(t("settings.general.import")) { showingImporter = true }
                 }
-                
+
                 Button(t("settings.general.resetDefaults"), role: .destructive) {
                     appState.resetToDefaults()
                 }
@@ -90,7 +92,7 @@ struct GeneralSettingsView: View {
             defaultFilename: "slow-quit-apps-config"
         ) { result in
             if case .failure(let error) = result {
-                print("导出失败: \(error)")
+                print("Export failed: \(error)")
             }
         }
         .fileImporter(
@@ -118,17 +120,17 @@ struct GeneralSettingsView: View {
     }
 }
 
-// MARK: - 配置文档（用于导出）
+// MARK: - Config Document (for export)
 
 struct ConfigDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.json] }
-    
+
     init() {}
-    
+
     init(configuration: ReadConfiguration) throws {
-        // 不需要从文件读取
+        // Reading from file is not needed
     }
-    
+
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
         let config = ConfigManager.shared.load()
         let encoder = JSONEncoder()
@@ -138,15 +140,15 @@ struct ConfigDocument: FileDocument {
     }
 }
 
-// MARK: - 无障碍权限状态
+// MARK: - Accessibility Status
 
 struct AccessibilityStatusRow: View {
     @State private var isEnabled = AccessibilityManager.shared.isAccessibilityEnabled
     @State private var i18n = I18n.shared
-    
+
     var body: some View {
         let _ = i18n.currentLanguage
-        
+
         LabeledContent {
             if isEnabled {
                 Text(t("accessibility.granted"))
@@ -158,7 +160,7 @@ struct AccessibilityStatusRow: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
-                    
+
                     Button(t("accessibility.restartApp")) {
                         restartApplication()
                     }
@@ -177,18 +179,18 @@ struct AccessibilityStatusRow: View {
             isEnabled = AccessibilityManager.shared.isAccessibilityEnabled
         }
     }
-    
-    /// 重启应用
+
+    /// Restart the app
     private func restartApplication() {
         guard let bundleURL = Bundle.main.bundleURL as URL? else { return }
-        
+
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
         task.arguments = ["-n", bundleURL.path]
-        
+
         try? task.run()
-        
-        // 延迟退出当前实例
+
+        // Terminate current instance after a short delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             NSApplication.shared.terminate(nil)
         }

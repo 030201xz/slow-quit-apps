@@ -1,26 +1,25 @@
 import Foundation
 
-/// 应用配置模型
-/// 存储用户的所有偏好设置
+/// Legacy app config model used by Defaults.swift (UserDefaults-based storage)
 struct AppConfig: Codable, Sendable {
-    /// 是否启用长按退出功能
-    var isEnabled: Bool
-    
-    /// 长按持续时间（秒）
+    /// Whether long-press-to-quit (⌘Q) is enabled
+    var quitOnLongPress: Bool
+
+    /// Hold duration (seconds)
     var holdDuration: Double
-    
-    /// 是否在菜单栏显示图标
+
+    /// Whether to show the menu bar icon
     var showMenuBarIcon: Bool
-    
-    /// 是否开机自启动
+
+    /// Whether to launch at login
     var launchAtLogin: Bool
-    
-    /// 是否显示进度条动画
+
+    /// Whether to show the progress animation
     var showProgressAnimation: Bool
-    
-    /// 默认配置
+
+    /// Default config
     static let `default` = AppConfig(
-        isEnabled: true,
+        quitOnLongPress: true,
         holdDuration: 1.0,
         showMenuBarIcon: true,
         launchAtLogin: false,

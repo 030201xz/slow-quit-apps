@@ -1,72 +1,72 @@
 import ServiceManagement
 
-/// 开机自启管理器
-/// 使用 SMAppService (macOS 13+) 管理登录项
-/// 注意：仅在签名的 .app 包中有效，swift run 开发模式下无效
+/// Launch-at-login manager
+/// Uses SMAppService (macOS 13+) to manage login items
+/// Note: only works inside a signed .app bundle, not in swift run
 enum LaunchAtLoginManager {
-    
-    /// 是否在有效的应用包环境中运行
+
+    /// Whether running inside a valid .app bundle
     private static var isValidAppBundle: Bool {
         Bundle.main.bundleIdentifier != nil && Bundle.main.bundleURL.pathExtension == "app"
     }
-    
-    /// 当前是否已设置开机启动
+
+    /// Whether launch-at-login is currently enabled
     static var isEnabled: Bool {
         guard isValidAppBundle else { return false }
         return SMAppService.mainApp.status == .enabled
     }
-    
-    /// 设置开机启动状态
-    /// - Parameter enabled: 是否启用
-    /// - Returns: 操作是否成功
+
+    /// Set the launch-at-login state
+    /// - Parameter enabled: whether to enable
+    /// - Returns: whether the operation succeeded
     @discardableResult
     static func setEnabled(_ enabled: Bool) -> Bool {
         guard isValidAppBundle else {
-            print("⚠️ 非应用包环境，跳过开机启动设置（开发模式）")
+            print("⚠️ Not an app bundle — skipping launch-at-login (dev mode)")
             return false
         }
-        
+
         do {
             if enabled {
-                // 注册开机启动
+                // Register login item
                 if SMAppService.mainApp.status == .enabled {
-                    print("✅ 已设置开机启动")
+                    print("✅ Launch-at-login already enabled")
                     return true
                 }
                 try SMAppService.mainApp.register()
-                print("✅ 开机启动已启用")
+                print("✅ Launch-at-login enabled")
             } else {
-                // 取消开机启动
+                // Unregister login item
                 if SMAppService.mainApp.status != .enabled {
-                    print("✅ 开机启动未启用")
+                    print("✅ Launch-at-login not enabled")
                     return true
                 }
                 try SMAppService.mainApp.unregister()
-                print("✅ 开机启动已禁用")
+                print("✅ Launch-at-login disabled")
             }
             return true
         } catch {
-            print("❌ 设置开机启动失败: \(error)")
+            print("❌ Failed to set launch-at-login: \(error)")
             return false
         }
     }
-    
-    /// 获取当前状态描述
+
+    /// Human-readable status description
     static var statusDescription: String {
         guard isValidAppBundle else {
-            return "开发模式（不可用）"
+            return "Dev mode (unavailable)"
         }
         switch SMAppService.mainApp.status {
         case .notRegistered:
-            return "未注册"
+            return "Not registered"
         case .enabled:
-            return "已启用"
+            return "Enabled"
         case .requiresApproval:
-            return "需要用户批准"
+            return "Requires approval"
         case .notFound:
-            return "应用未找到"
+            return "App not found"
         @unknown default:
-            return "未知状态"
+            return "Unknown status"
         }
     }
 }

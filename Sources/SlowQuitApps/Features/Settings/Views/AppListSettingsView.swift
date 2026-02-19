@@ -1,18 +1,18 @@
 import SwiftUI
 
-/// 应用列表设置视图
-/// 管理排除列表（白名单）
+/// App list settings view
+/// Manages the excluded apps list
 struct AppListSettingsView: View {
     @Bindable var appState = AppState.shared
     @State private var i18n = I18n.shared
     @State private var showingAppPicker = false
-    
+
     var body: some View {
-        // 通过访问 currentLanguage 确保语言变化时视图刷新
+        // Access currentLanguage to trigger refresh on language change
         let _ = i18n.currentLanguage
-        
+
         VStack(spacing: 0) {
-            // 顶部说明
+            // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(t("settings.appList.title"))
@@ -21,9 +21,9 @@ struct AppListSettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     showingAppPicker = true
                 } label: {
@@ -31,10 +31,10 @@ struct AppListSettingsView: View {
                 }
             }
             .padding()
-            
+
             Divider()
-            
-            // 应用列表
+
+            // App list
             if appState.excludedApps.isEmpty {
                 emptyStateView
             } else {
@@ -50,7 +50,7 @@ struct AppListSettingsView: View {
             }
         }
     }
-    
+
     private var emptyStateView: some View {
         ContentUnavailableView(
             t("settings.appList.empty"),
@@ -58,12 +58,12 @@ struct AppListSettingsView: View {
             description: Text(t("settings.appList.emptyDescription"))
         )
     }
-    
+
     private var appListView: some View {
         List {
             ForEach(appState.excludedApps) { app in
                 HStack(spacing: 12) {
-                    // 使用与 InstalledAppRow 相同的图标加载方式
+                    // Load icon the same way as InstalledAppRow
                     if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
                         Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
                             .resizable()
@@ -74,18 +74,18 @@ struct AppListSettingsView: View {
                             .foregroundStyle(.secondary)
                             .frame(width: 32, height: 32)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(app.name)
                             .font(.system(size: 13, weight: .medium))
-                        
+
                         Text(app.bundleIdentifier)
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Button(role: .destructive) {
                         appState.removeExcludedApp(app)
                     } label: {
@@ -101,28 +101,28 @@ struct AppListSettingsView: View {
     }
 }
 
-// MARK: - 应用列表行
+// MARK: - App List Row
 
 struct AppListRow: View {
     let app: ManagedApp
     let onRemove: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 12) {
             AppIconView(bundleIdentifier: app.bundleIdentifier)
                 .frame(width: 32, height: 32)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
                     .font(.system(size: 13, weight: .medium))
-                
+
                 Text(app.bundleIdentifier)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
-            
+
             Spacer()
-            
+
             Button(role: .destructive, action: onRemove) {
                 Image(systemName: "trash")
             }
@@ -133,11 +133,11 @@ struct AppListRow: View {
     }
 }
 
-// MARK: - 应用图标视图
+// MARK: - App Icon View
 
 struct AppIconView: View {
     let bundleIdentifier: String
-    
+
     var body: some View {
         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
             Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
@@ -150,22 +150,22 @@ struct AppIconView: View {
     }
 }
 
-// MARK: - 已安装应用选择器
+// MARK: - Installed App Picker
 
 struct InstalledAppPicker: View {
     let onSelect: (ManagedApp) -> Void
     let onCancel: () -> Void
-    
+
     @State private var i18n = I18n.shared
     @State private var searchText = ""
     @State private var installedApps: [AppInfo] = []
     @State private var isLoading = true
-    
+
     var body: some View {
         let _ = i18n.currentLanguage
-        
+
         VStack(spacing: 0) {
-            // 标题栏
+            // Title bar
             HStack {
                 Text(t("settings.appList.selectApp"))
                     .font(.headline)
@@ -173,16 +173,16 @@ struct InstalledAppPicker: View {
                 Button(t("settings.appList.cancel"), action: onCancel)
             }
             .padding()
-            
-            // 搜索框
+
+            // Search field
             TextField(t("settings.appList.search"), text: $searchText)
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal)
-            
+
             Divider()
                 .padding(.top, 8)
-            
-            // 应用列表
+
+            // App list
             if isLoading {
                 ProgressView(t("settings.appList.loading"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -203,7 +203,7 @@ struct InstalledAppPicker: View {
             loadInstalledApps()
         }
     }
-    
+
     private var filteredApps: [AppInfo] {
         guard !searchText.isEmpty else { return installedApps }
         let query = searchText.lowercased()
@@ -212,7 +212,7 @@ struct InstalledAppPicker: View {
             $0.bundleIdentifier.lowercased().contains(query)
         }
     }
-    
+
     private func selectApp(_ app: AppInfo) {
         let managedApp = ManagedApp(
             bundleIdentifier: app.bundleIdentifier,
@@ -222,31 +222,31 @@ struct InstalledAppPicker: View {
         )
         onSelect(managedApp)
     }
-    
-    /// 加载已安装应用
+
+    /// Load installed apps
     private func loadInstalledApps() {
         isLoading = true
-        
-        // 在后台线程扫描应用
+
+        // Scan apps on a background thread
         DispatchQueue.global(qos: .userInitiated).async {
             let appURLs = findInstalledApplications()
-            
+
             var apps: [AppInfo] = []
             for url in appURLs {
                 guard let bundle = Bundle(url: url),
                       let bundleId = bundle.bundleIdentifier else { continue }
-                
+
                 let name = bundle.infoDictionary?["CFBundleName"] as? String
                     ?? bundle.infoDictionary?["CFBundleDisplayName"] as? String
                     ?? url.deletingPathExtension().lastPathComponent
-                
+
                 apps.append(AppInfo(bundleIdentifier: bundleId, name: name, url: url))
             }
-            
-            // 按名称排序
+
+            // Sort by name
             apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-            
-            // 主线程更新 UI
+
+            // Update UI on main thread
             DispatchQueue.main.async {
                 self.installedApps = apps
                 self.isLoading = false
@@ -255,67 +255,67 @@ struct InstalledAppPicker: View {
     }
 }
 
-// MARK: - 应用扫描工具
+// MARK: - App Scanner
 
-/// 扫描已安装的应用（线程安全）
+/// Scan installed applications (thread-safe)
 private func findInstalledApplications() -> [URL] {
     var urls: [URL] = []
-    
+
     let searchPaths = [
         "/Applications",
         "/System/Applications",
         NSHomeDirectory() + "/Applications"
     ]
-    
+
     let fileManager = FileManager.default
-    
+
     for path in searchPaths {
         guard let enumerator = fileManager.enumerator(
             at: URL(fileURLWithPath: path),
             includingPropertiesForKeys: [.isApplicationKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) else { continue }
-        
+
         for case let url as URL in enumerator {
             if url.pathExtension == "app" {
                 urls.append(url)
             }
         }
     }
-    
+
     return urls
 }
 
-// MARK: - 应用信息
+// MARK: - App Info
 
 struct AppInfo: Identifiable {
     let bundleIdentifier: String
     let name: String
     let url: URL
-    
+
     var id: String { bundleIdentifier }
 }
 
-// MARK: - 已安装应用行
+// MARK: - Installed App Row
 
 struct InstalledAppRow: View {
     let app: AppInfo
-    
+
     var body: some View {
         HStack(spacing: 12) {
             Image(nsImage: NSWorkspace.shared.icon(forFile: app.url.path))
                 .resizable()
                 .frame(width: 32, height: 32)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
                     .font(.system(size: 13, weight: .medium))
-                
+
                 Text(app.bundleIdentifier)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
-            
+
             Spacer()
         }
         .padding(.vertical, 4)

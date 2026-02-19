@@ -1,96 +1,107 @@
 import Cocoa
 
-/// 退出进度控制器
-/// 核心逻辑：keyDown 开始计时，keyUp 停止计时，达到时间执行退出
+/// Quit progress controller
+/// Core logic: keyDown starts the timer, keyUp cancels it, completion triggers quit or close
 @MainActor
 final class QuitProgressController: KeyEventDelegate {
     static let shared = QuitProgressController()
-    
-    /// 进度更新定时器
+
+    /// Progress update timer
     private var timer: Timer?
-    
-    /// 按下开始时间
+
+    /// Time when the key was pressed
     private var startTime: Date?
-    
-    /// 当前目标应用
+
+    /// Target application
     private var targetApp: NSRunningApplication?
-    
-    /// 是否正在计时
+
+    /// Whether the timer is running
     private var isRunning = false
-    
-    /// 安全超时阈值（秒）- 防止定时器泄漏
-    /// 如果超过 holdDuration + 此值没有收到 keyUp，强制停止
+
+    /// Key code that triggered the current long press
+    private var triggeredKeyCode: UInt16 = 0
+
+    /// Modifiers held when the long press started (used to replay the exact combination)
+    private var triggeredModifiers: CGEventFlags = []
+
+    /// Safety timeout (seconds) — prevents timer leaks
+    /// Force-stops if no keyUp received within holdDuration + this value
     private let safetyTimeout: TimeInterval = 1.0
-    
+
     private let appState = AppState.shared
     private let overlayWindow = QuitOverlayWindow.shared
-    
+
     private init() {}
-    
-    // MARK: - 公开方法
-    
+
+    // MARK: - Public
+
     func start() {
         KeyEventMonitor.shared.delegate = self
+        observeExcludedApps()
         KeyEventMonitor.shared.startMonitoring()
     }
-    
+
+    private func observeExcludedApps() {
+        withObservationTracking {
+            let ids = Set(appState.excludedApps.filter(\.isExcluded).map(\.bundleIdentifier))
+            KeyEventMonitor.shared.setExcludedApps(ids)
+            KeyEventMonitor.shared.setCloseWindowOnLongPress(appState.closeWindowOnLongPress)
+        } onChange: {
+            Task { @MainActor [weak self] in
+                self?.observeExcludedApps()
+            }
+        }
+    }
+
     func stop() {
         KeyEventMonitor.shared.stopMonitoring()
         stopTimer()
     }
-    
+
     // MARK: - KeyEventDelegate
-    
+
     func keyEventMonitor(_ monitor: KeyEventMonitor, didReceiveKeyDown event: KeyEvent) {
-        // 已经在计时中，忽略重复的 keyDown（键盘重复）
+        // Already timing — ignore key repeat
         guard !isRunning else { return }
-        
-        guard appState.isEnabled else {
-            // 禁用时直接退出
-            NSWorkspace.shared.frontmostApplication?.terminate()
-            return
+
+        // quitOnLongPress only governs Cmd+Q
+        if event.isCmdQDown {
+            guard appState.quitOnLongPress else {
+                NSWorkspace.shared.frontmostApplication?.terminate()
+                return
+            }
         }
-        
+
         guard let app = NSWorkspace.shared.frontmostApplication,
               let bundleId = app.bundleIdentifier else { return }
-        
-        // 调试：打印当前应用和排除状态
-        let isExcluded = appState.isAppExcluded(bundleId)
-        print("🔍 检测到 Cmd+Q: \(app.localizedName ?? "未知") [\(bundleId)] 排除状态: \(isExcluded)")
-        print("📋 排除列表: \(appState.excludedApps.map { "\($0.bundleIdentifier):\($0.isExcluded)" })")
-        
-        // 白名单应用直接退出
-        if isExcluded {
-            print("⚡ 直接退出（已排除）")
-            app.terminate()
-            return
-        }
-        
-        print("⏱️ 开始计时...")
-        // 开始计时
+
+        print("🔍 Detected Cmd+\(event.isWKey ? "W" : "Q"): \(app.localizedName ?? "Unknown") [\(bundleId)]")
+        print("⏱️ Timer started")
+        triggeredKeyCode = event.keyCode
+        triggeredModifiers = CGEventFlags(rawValue: UInt64(event.modifiers))
         startTimer(for: app)
     }
-    
+
     func keyEventMonitor(_ monitor: KeyEventMonitor, didReceiveKeyUp event: KeyEvent) {
-        // keyUp 立即停止
         stopTimer()
     }
-    
-    // MARK: - 计时器
-    
+
+    // MARK: - Timer
+
     private func startTimer(for app: NSRunningApplication) {
-        // 先清理可能遗留的定时器
+        // Clear any leftover timer
         stopTimer()
-        
+
         isRunning = true
         startTime = Date()
         targetApp = app
-        
-        let appName = app.localizedName ?? "未知应用"
-        overlayWindow.show(appName: appName)
+
+        let appName = app.localizedName ?? "Unknown"
+        let keyLabel = triggeredKeyCode == Constants.Keyboard.wKeyCode ? "W" : "Q"
+        overlayWindow.show(appName: appName, keyLabel: keyLabel)
         appState.startQuitProgress(for: app.bundleIdentifier ?? "")
-        
-        // 60fps 更新进度
+
+        // Update at 60 fps
         let newTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.tick()
@@ -99,53 +110,66 @@ final class QuitProgressController: KeyEventDelegate {
         timer = newTimer
         RunLoop.main.add(newTimer, forMode: .common)
     }
-    
+
     private func tick() {
-        // 安全检查：如果状态不一致，立即停止
+        // Safety check: stop if state is inconsistent
         guard isRunning,
               let start = startTime,
               let app = targetApp else {
             stopTimer()
             return
         }
-        
-        // 检查目标应用是否还在运行
+
+        // Stop if the target app has already quit
         guard !app.isTerminated else {
             stopTimer()
             return
         }
-        
+
         let elapsed = Date().timeIntervalSince(start)
-        
-        // 安全超时检查：防止定时器泄漏
+
+        // Safety timeout: prevent timer leaks
         let maxDuration = appState.holdDuration + safetyTimeout
         if elapsed > maxDuration {
-            print("⚠️ 安全超时，强制停止计时器")
+            print("⚠️ Safety timeout — force-stopping timer")
             stopTimer()
             return
         }
-        
+
         let progress = min(1.0, elapsed / appState.holdDuration)
-        
+
         appState.updateQuitProgress(progress)
         overlayWindow.updateProgress(progress)
-        
+
         if progress >= 1.0 {
-            // 达到目标，执行退出
-            let appToQuit = app
+            let keyCode = triggeredKeyCode
+            let modifiers = triggeredModifiers
             stopTimer()
             appState.completeQuit()
-            appToQuit.terminate()
+            synthesizeAndPost(keyCode: keyCode, modifiers: modifiers)
         }
     }
-    
+
+    /// Synthesize and post a key event with the original modifiers to the frontmost app
+    private func synthesizeAndPost(keyCode: UInt16, modifiers: CGEventFlags) {
+        // Set passthrough flag so our tap doesn't re-intercept the synthesized event
+        KeyEventMonitorWrapper.shared.passthroughKeyCode = keyCode
+        // Also release the real keyUp (user is still holding the key)
+        KeyEventMonitorWrapper.shared.isIntercepting = false
+
+        let src = CGEventSource(stateID: .hidSystemState)
+        let evt = CGEvent(keyboardEventSource: src, virtualKey: CGKeyCode(keyCode), keyDown: true)
+        evt?.flags = modifiers
+        evt?.post(tap: .cghidEventTap)
+    }
+
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
         startTime = nil
         targetApp = nil
         isRunning = false
-        
+
         appState.cancelQuitProgress()
         overlayWindow.hide()
     }

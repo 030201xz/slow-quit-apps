@@ -1,43 +1,45 @@
 import Foundation
 
-/// 应用常量定义
+/// App-wide constants
 enum Constants {
-    /// 应用信息
+    /// App info
     enum App {
         static let name = "Slow Quit Apps"
         static let bundleIdentifier = "com.slowquitapps.app"
-        static let version = "1.0.0"
+        static let version = "1.1.0"
     }
-    
-    /// 快捷键相关
+
+    /// Keyboard shortcuts
     enum Keyboard {
-        /// Command + Q 的按键码
+        /// Virtual key code for Q
         static let qKeyCode: UInt16 = 12
-        /// Command 修饰键
+        /// Virtual key code for W
+        static let wKeyCode: UInt16 = 13
+        /// Command modifier flag
         static let commandModifier: UInt = 1 << 20
     }
-    
-    /// 进度条配置
+
+    /// Progress configuration
     enum Progress {
-        /// 默认长按持续时间（秒）
+        /// Default hold duration (seconds)
         static let defaultHoldDuration: Double = 1.0
-        /// 最小持续时间
+        /// Minimum hold duration
         static let minHoldDuration: Double = 0.3
-        /// 最大持续时间
+        /// Maximum hold duration
         static let maxHoldDuration: Double = 3.0
-        /// 进度更新频率（秒）
+        /// Timer update interval (seconds)
         static let updateInterval: Double = 1.0 / 60.0
     }
-    
-    /// 窗口尺寸
+
+    /// Window sizes
     enum Window {
-        /// 进度条窗口宽度
+        /// Overlay window width
         static let overlayWidth: CGFloat = 200
-        /// 进度条窗口高度
+        /// Overlay window height
         static let overlayHeight: CGFloat = 60
-        /// 设置窗口宽度
+        /// Settings window width
         static let settingsWidth: CGFloat = 500
-        /// 设置窗口高度
+        /// Settings window height
         static let settingsHeight: CGFloat = 350
     }
 }
